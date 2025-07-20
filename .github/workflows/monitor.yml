@@ -1,4 +1,4 @@
-name: Monitor Cue Cinemas Page (Dockerized)
+name: Monitor Page (Dockerized)
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: cue-monitor
+  IMAGE_NAME: monitor
 
 jobs:
   monitor:
