@@ -1,69 +1,97 @@
-import requests
-import hashlib
-import smtplib
-import os
-from bs4 import BeautifulSoup
-from email.message import EmailMessage
-from dotenv import load_dotenv
+import time
+import threading
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List
+import uvicorn
+from bson import ObjectId
 
-load_dotenv()
+from .configs.Configurations import SENDER_EMAIL, SENDER_PASSWORD, CHECK_INTERVAL
+from .utilities.utils import Utils
+from .database.schema import projects_collection
+from .utilities.logger import logger
 
-URL = os.getenv("URL_TO_USE")
-if not URL:
-    print("URL_TO_USE is not set in the environment variables.")
-    exit(1)
+app = FastAPI()
 
-HASH_FILE = "last_hash.txt"
-RECIPIENTS = os.getenv("RECIPIENTS")
-if RECIPIENTS:
-    RECIPIENTS = [email.strip() for email in RECIPIENTS.split(",")]
-else:
-    print("RECIPIENTS is not set in the environment variables.")
-    exit(1)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
-SENDER_EMAIL = os.environ["SENDER_EMAIL"]
-SENDER_PASSWORD = os.environ["SENDER_PASSWORD"]
+MAX_THREADS = 10
+monitor_threads = {}
+monitor_threads_lock = threading.Lock()
 
-def fetch_page():
-    headers = {"User-Agent": "Mozilla/5.0"}
-    res = requests.get(URL, headers=headers, timeout=10)
-    res.raise_for_status()
-    return res.text
+class MonitorRequest(BaseModel):
+    url: str
+    emails: List[str]
+    project_id: str
 
-def get_hash(content):
-    soup = BeautifulSoup(content, "html.parser")
-    text = soup.get_text(strip=True)
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+def monitor_project_thread(project_id, url, emails):
+    logger.info(f"[Thread] Started monitoring {url} for project {project_id}")
 
-def load_last_hash():
-    return open(HASH_FILE).read() if os.path.exists(HASH_FILE) else ""
+    while True:
+        project = projects_collection.find_one({"_id": ObjectId(project_id)})
+        if not project:
+            logger.info(f"[Thread] Project {project_id} deleted. Stopping thread.")
+            break
 
-def save_hash(new_hash):
-    with open(HASH_FILE, "w") as f:
-        f.write(new_hash)
+        old_hash = project.get("lastHash")
+        html = Utils.fetch_page(url)
 
-def send_email():
-    msg = EmailMessage()
-    msg["Subject"] = "🎬 Page Updated!"
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = ", ".join(RECIPIENTS)
-    msg.set_content(f"The page has changed: {URL}")
-    
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
-        smtp.send_message(msg)
+        if not html:
+            time.sleep(CHECK_INTERVAL)
+            continue
 
-def main():
-    html = fetch_page()
-    new_hash = get_hash(html)
-    old_hash = load_last_hash()
+        new_hash = Utils.get_hash(html)
 
-    if new_hash != old_hash:
-        print("Change detected! Sending alert.")
-        send_email()
-        save_hash(new_hash)
-    else:
-        print("No change.")
+        if not old_hash:
+            logger.success(f"Monitoring started for {url}!")
+            Utils.send_email(emails, url, started=True)
+            projects_collection.update_one(
+                {"_id": ObjectId(project_id)},
+                {"$set": {"lastHash": new_hash, "lastChecked": time.time()}}
+            )
+        elif new_hash != old_hash:
+            logger.success(f"Change detected for {url}!")
+            Utils.send_email(emails, url, started=False)
+            projects_collection.update_one(
+                {"_id": ObjectId(project_id)},
+                {"$set": {"lastHash": new_hash, "lastChecked": time.time()}}
+            )
+        else:
+            logger.info(f"No change for {url}.")
+
+        time.sleep(CHECK_INTERVAL)
+
+    logger.info(f"[Thread] Stopped monitoring {url} for project {project_id}")
+    with monitor_threads_lock:
+        monitor_threads.pop(project_id, None)
+
+@app.post("/monitor/start")
+def start_monitoring(req: MonitorRequest):
+    with monitor_threads_lock:
+        if len(monitor_threads) >= MAX_THREADS:
+            logger.error("Max monitoring threads reached.")
+            raise HTTPException(status_code=429, detail="Max monitoring threads reached.")
+        if req.project_id in monitor_threads:
+            logger.warning(f"Monitoring already started for project {req.project_id}.")
+            raise HTTPException(status_code=400, detail="Monitoring already started for this project.")
+        t = threading.Thread(target=monitor_project_thread, args=(req.project_id, req.url, req.emails), daemon=True)
+        monitor_threads[req.project_id] = t
+        t.start()
+        logger.success(f"Started monitoring thread for project {req.project_id}")
+    return {"status": "monitoring started", "project_id": req.project_id}
 
 if __name__ == "__main__":
-    main()
+    logger.info("Starting FastAPI server for monitor service...")
+    uvicorn.run("monitor.monitor:app", host="0.0.0.0", port=8000, reload=False)
