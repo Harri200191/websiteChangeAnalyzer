@@ -1,4 +1,4 @@
-# websiteChangeAnalyzer
+# Website Change Analyzer
 
 ## Overview
 websiteChangeAnalyzer is a full-stack application designed to monitor web pages for changes and notify users via email when a change is detected. It allows users to specify URLs to monitor and email addresses to notify, providing a user-friendly interface and automated monitoring.
@@ -116,7 +116,7 @@ MIT
 ---
 
 ## Author
-[Your Name]
+Haris Rehman
 
 ---
 
