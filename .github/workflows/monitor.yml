@@ -40,5 +40,5 @@ jobs:
         with:
           context: ./monitor
           file: ./monitor/Dockerfile.app
-          tags: ghcr.io/${{ github.repository_owner }}/cue-monitor:latest
+          tags: ghcr.io/${{ github.repository_owner }}/monitor:latest
           push: true
