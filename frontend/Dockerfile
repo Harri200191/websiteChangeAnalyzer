@@ -7,6 +7,11 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+ARG VITE_API_URL,VITE_MONITOR_URL
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_MONITOR_URL=$VITE_MONITOR_URL
+
 RUN npm run build
 
 # === 2. Serve stage ===

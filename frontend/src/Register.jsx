@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { api } from './api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -38,7 +38,7 @@ function Register({ setIsAuthenticated }) {
       return;
     }
     try {
-      await axios.post('/api/users/register', { name, email, password, confirmPassword });
+      await api.post('/users/register', { name, email, password, confirmPassword });
       toast.success('Registration successful! Please login.');
       setTimeout(() => navigate('/login'), 1500);
     } catch (err) {

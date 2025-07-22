@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { api, monitorApi } from './api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -38,7 +38,7 @@ function Dashboard() {
   const loadProjects = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/api/projects', {
+      const res = await api.get('/projects', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProjects(res.data);
@@ -73,15 +73,15 @@ function Dashboard() {
     }
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('/api/projects', { url, emails: filteredEmails }, {
+      const res = await api.post('/projects', { url, emails: filteredEmails }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const project = res.data;
       toast.success('Project added successfully!');
       
       try {
-        await axios.post(
-          `${import.meta.env.VITE_MONITOR_URL || 'http://localhost:8000'}/monitor/start`,
+        await monitorApi.post(
+          `/monitor/start`,
           { url, emails: filteredEmails, project_id: project._id }
         );
         toast.success('Monitoring started!');
@@ -101,7 +101,7 @@ function Dashboard() {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/projects/${id}`, {
+      await api.delete(`/projects/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       loadProjects();
