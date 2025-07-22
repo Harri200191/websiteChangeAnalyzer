@@ -36,26 +36,9 @@ router.post('/', auth, async (req, res) => {
   const project = new Project({ url, emails, user: req.userId });
   await project.save();
 
-  // Call monitor.py in 'init' mode to get initial hash and send 'monitoring started' email
-  try {
-    const sender = process.env.SENDER_EMAIL;
-    const password = process.env.SENDER_PASSWORD;
-    const args = [
-      'monitor/monitor.py',
-      url,
-      emails.join(','),
-      sender,
-      password,
-      'init',
-      `monitor/last_hash_${project._id}.txt`
-    ];
-    const result = spawnSync('python', args, { encoding: 'utf-8' });
-    if (result.error) throw result.error;
-    const hash = result.stdout.trim().split('\n').pop();
-    project.lastHash = hash;
+  try { 
     await project.save();
   } catch (err) {
-    // Optionally: delete project if monitor fails
     await project.deleteOne();
     return res.status(500).json({ message: 'Failed to initialize monitoring: ' + err.message });
   }
