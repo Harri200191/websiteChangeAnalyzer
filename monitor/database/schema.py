@@ -1,3 +1,3 @@
-from .connect import db
+from database.connect import db
 
 projects_collection = db.projects

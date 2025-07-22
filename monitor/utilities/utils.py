@@ -4,9 +4,9 @@ import smtplib
 import time
 from bs4 import BeautifulSoup
 from email.message import EmailMessage
-from monitor.configs.Configurations import SENDER_EMAIL, SENDER_PASSWORD
-from monitor.database.schema import projects_collection
-from monitor.utilities.logger import logger
+from configs.Configurations import SENDER_EMAIL, SENDER_PASSWORD
+from database.schema import projects_collection
+from utilities.logger import logger
 
 class Utils:
     @staticmethod
