@@ -1,39 +1,25 @@
 version: '3.9'
-services:
-  mongo:
-    image: mongo
-    container_name: mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
 
+services: 
   backend:
-    build: ./backend
+    image: ghcr.io/harri200191/websitechangeanalyzer/backend:${BACKEND_TAG}
     ports:
       - "5000:5000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/cue-monitor
-    depends_on:
-      - mongo
+      - MONGO_URI=${MONGO_URI} 
+    volumes:
+      - ./backend/.env:/app/.env:ro
 
   frontend:
-    build: ./frontend
+    image: ghcr.io/harri200191/websitechangeanalyzer/frontend:${FRONTEND_TAG}
     ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_BACKEND_URL=http://localhost:5000
+      - "4173:4173" 
 
   monitor:
-    build:
-      context: ./monitor
-      dockerfile: Dockerfile.app
-    depends_on:
-      - mongo
+    image: ghcr.io/harri200191/websitechangeanalyzer/monitor-app:${MONITOR_TAG}
+    ports:
+      - "8000:8000" 
     environment:
-      - MONGO_URI=mongodb://mongo:27017/cue-monitor
-      - SENDER_EMAIL=your@email.com
-      - SENDER_PASSWORD=your_app_password
-
-volumes:
-  mongo_data:
+      - MONGO_URI=${MONGO_URI} 
+    volumes:
+      - ./monitor/.env:/app/.env:ro 
