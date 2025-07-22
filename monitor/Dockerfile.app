@@ -4,4 +4,4 @@ WORKDIR /app
 
 COPY . .
 
-CMD ["uvicorn", "monitor.monitor:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "monitor_app:app", "--host", "0.0.0.0", "--port", "8000"]
