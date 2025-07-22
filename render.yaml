@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: frontend
+    env: docker
+    image: ghcr.io/harri200191/websitechangeanalyzer/frontend:${FRONTEND_TAG}
+    plan: free
+    region: oregon
+    autoDeploy: true
+    ports:
+      - 4173
+
+  - type: web
+    name: backend
+    env: docker
+    image: ghcr.io/harri200191/websitechangeanalyzer/backend:${BACKEND_TAG}
+    plan: free
+    region: oregon
+    autoDeploy: true
+    ports:
+      - 5000
+    envVars:
+      - key: MONGO_URI
+        sync: false   
+    secretFiles:
+      - source: backend.env
+        dest: /app/.env
+
+  - type: web
+    name: monitor
+    env: docker
+    image: ghcr.io/harri200191/websitechangeanalyzer/monitor-app:${MONITOR_TAG}
+    plan: free
+    region: oregon
+    autoDeploy: true
+    ports:
+      - 8000
+    envVars:
+      - key: MONGO_URI
+        sync: false
+    secretFiles:
+      - source: monitor.env
+        dest: /app/.env
