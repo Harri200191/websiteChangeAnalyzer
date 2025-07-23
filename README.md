@@ -85,6 +85,14 @@ FRONTEND_URL=         # Frontend domain to include in email links (only needed i
 ### Running with Docker Compose
 1. Clone the repository
 2. Configure environment variables as needed
+ 
+    ```env  
+   BACKEND_TAG=
+   FRONTEND_TAG=
+   MONITOR_TAG=
+   MONGO_URI=
+    ```
+ 
 3. Run:
    ```sh
    docker-compose up --build
