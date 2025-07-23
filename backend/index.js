@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const projectRoutes = require('./routes/Project');
 const userRoutes = require('./routes/User');
+const dotenv = require('dotenv')
+
+dotenv.config()
+const frontend_version = process.env.FRONTEND_TAG
 
 const app = express();
 
@@ -15,6 +19,7 @@ app.use(cors({
     'http://0.0.0.0:5173',
     'http://127.0.0.1:4173',
     'http://127.0.0.1:5173',
+    frontend_version
   ],
 }));
 
