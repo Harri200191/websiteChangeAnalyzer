@@ -7,12 +7,14 @@ from typing import List
 import uvicorn
 from bson import ObjectId
 
-from configs.Configurations import SENDER_EMAIL, SENDER_PASSWORD, CHECK_INTERVAL
+from configs.Configurations import FRONTEND_TAG, CHECK_INTERVAL
 from utilities.utils import Utils
 from database.schema import projects_collection
 from utilities.logger import logger
 
 app = FastAPI()
+
+render_host = FRONTEND_TAG 
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,6 +27,7 @@ app.add_middleware(
         "http://0.0.0.0:5000",
         "http://0.0.0.0:5173",
         "http://127.0.0.1:5173",
+        render_host
     ],
     allow_credentials=True,
     allow_methods=["*"],
