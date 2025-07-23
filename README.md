@@ -52,11 +52,35 @@ The project consists of three main components:
 - Python 3.10+ (for monitor service)
 
 ### Environment Variables
-- The monitor service requires the following environment variables:
-  - `URL_TO_USE`: The URL to monitor
-  - `RECIPIENTS`: Comma-separated list of email addresses to notify
-  - `SENDER_EMAIL`: The sender's email address (Gmail)
-  - `SENDER_PASSWORD`: The sender's email password or app password
+
+Each part of the application requires specific environment variables to function correctly. Below is a breakdown of the environment variables required for the **frontend**, **backend**, and **monitor** services:
+
+#### Frontend (`/frontend`)
+These variables are used to configure the frontend to communicate with the backend and monitor services:
+
+```env
+VITE_API_URL=         # URL of the backend API (e.g., http://localhost:5000/api)
+VITE_MONITOR_URL=     # URL where the monitor service is hosted (if needed for triggering or status display)
+```
+
+#### Backend (`/backend`)
+These variables are used to configure the backend to communicate with the backend and monitor services:
+
+```env
+MONGO_URI=            # MongoDB connection string (e.g., mongodb://localhost:27017/monitorDB)
+JWT_SECRET=           # Secret key for signing JWT tokens (for authentication, if implemented)
+FRONTEND_URL=         # Frontend domain for CORS (only needed if deployed to a custom domain)
+```
+
+#### Monitor (`/monitor`)
+
+```env
+SENDER_EMAIL=         # The email address used to send notifications (e.g., a Gmail address)
+SENDER_PASSWORD=      # Password or app-specific password for the sender email
+MONGO_URI=            # MongoDB connection string to read monitoring project data
+CHECK_INTERVAL=       # Time interval (in seconds) between content checks (e.g., 300 for 5 minutes)
+FRONTEND_URL=         # Frontend domain to include in email links (only needed if deployed to a custom domain)
+```
 
 ### Running with Docker Compose
 1. Clone the repository
