@@ -7,7 +7,7 @@ const userRoutes = require('./routes/User');
 const dotenv = require('dotenv')
 
 dotenv.config()
-const frontend_version = process.env.FRONTEND_TAG
+const frontend_version = process.env.FRONTEND_URL
 
 const app = express();
 
